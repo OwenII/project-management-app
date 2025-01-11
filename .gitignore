@@ -1,0 +1,44 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Docker
+*.log
+*.env
+docker-compose.override.yml
+
+# Virtualenv
+.env/
+.venv/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+package.json.lock
+
+# IDEs
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# SQLite database
+*.sqlite
+*.db
+
+# Logs
+*.log
+
+# Python environment and build directories
+dist/
+build/
+*.egg-info/
+*.eggs/
+
+# Configuration files
+*.env
