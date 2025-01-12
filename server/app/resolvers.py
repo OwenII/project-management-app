@@ -260,3 +260,30 @@ def resolve_delete_project(_, info, id):
         return True
     finally:
         session.close()
+
+@mutation.field("updateUser")
+def resolve_update_user(_, info, id, username):
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter(User.id == id).first()
+        if not user:
+            raise Exception("Utilisateur non trouvé")
+        user.username = username
+        session.commit()
+        session.refresh(user)
+        return user
+    finally:
+        session.close()
+
+@mutation.field("deleteUser")
+def resolve_delete_user(_, info, id):
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter(User.id == id).first()
+        if not user:
+            raise Exception("Utilisateur non trouvé")
+        session.delete(user)
+        session.commit()
+        return True
+    finally:
+        session.close()

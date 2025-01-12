@@ -10,7 +10,27 @@ class User(Base):
     password = Column(String, nullable=False)
     username = Column(String, unique=True, nullable=False)
 
-    projects = relationship("Project", back_populates="owner")
+    # Relation avec les commentaires
+    comments = relationship("Comment", back_populates="author", cascade="all, delete")
+    
+    # Relation avec les projets
+    projects = relationship("Project", back_populates="owner", cascade="all, delete")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String, nullable=False)
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"))
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"))
+
+    # Relation avec User
+    author = relationship("User", back_populates="comments")
+    project = relationship("Project", backref="comments")
+    task = relationship("Task", backref="comments")
+
+
 
 class Project(Base):
     __tablename__ = "projects"
@@ -30,18 +50,6 @@ class Task(Base):
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
     project = relationship("Project", back_populates="tasks")
-
-class Comment(Base):
-    __tablename__ = "comments"
-    id = Column(Integer, primary_key=True, index=True)
-    content = Column(String, nullable=False)
-    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)  # Non nullable
-    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"))
-    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"))
-
-    author = relationship("User", backref="comments")
-    project = relationship("Project", backref="comments")
-    task = relationship("Task", backref="comments")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"

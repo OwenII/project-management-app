@@ -57,6 +57,8 @@ type_defs = """
         createUser(email: String!, username: String!, password: String!): User!
         updateComment(id: Int!, content: String!): Comment!
         deleteComment(id: Int!): Comment!
+        updateUser(id: Int!, username: String!): User!
+        deleteUser(id: Int!): Boolean!
     }
 
 """
