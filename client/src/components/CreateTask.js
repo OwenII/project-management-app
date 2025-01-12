@@ -1,4 +1,3 @@
-//client\src\components\CreateTask.js
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 
@@ -37,20 +36,25 @@ function CreateTask({ projectId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("[DEBUG] Création de tâche avec projectId :", projectId);
+  
     try {
       const result = await createTask({ 
-        variables: { title, status, projectId },
+        variables: { title, status, projectId }, 
         refetchQueries: [
           { query: PROJECT_QUERY, variables: { id: projectId } }
         ],
         awaitRefetchQueries: true
       });
+  
+      console.log("[DEBUG] Résultat complet de la mutation :", result);
       console.log("[DEBUG] Tâche créée :", result.data.createTask);
       setTitle('');
     } catch (err) {
       console.error("[DEBUG] Erreur lors de la création de la tâche :", err);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit}>

@@ -1,5 +1,5 @@
 from ariadne import make_executable_schema
-from .resolvers import query, mutation, project_type, comment_obj
+from .resolvers import query, mutation, project_type, comment_obj, task_type
 
 type_defs = """
     type User {
@@ -57,4 +57,5 @@ type_defs = """
     }
 """
 
-schema = make_executable_schema(type_defs, [query, mutation, project_type, comment_obj])
+schema = make_executable_schema(type_defs, [query, mutation, project_type, comment_obj, task_type])
+

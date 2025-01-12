@@ -103,13 +103,28 @@ def resolve_create_project(_, info, name, description, ownerId):
 def resolve_create_task(_, info, title, status, projectId):
     session = SessionLocal()
     try:
+        print(f"[DEBUG] Paramètres reçus : title={title}, status={status}, projectId={projectId}")
+
+        project = session.query(Project).filter(Project.id == projectId).first()
+        if not project:
+            print(f"[DEBUG] Aucun projet trouvé avec l'ID {projectId}")
+            raise Exception(f"Le projet avec l'ID {projectId} n'existe pas.")
+
         task = Task(title=title, status=status, project_id=projectId)
         session.add(task)
         session.commit()
         session.refresh(task)
+
+        print(f"[DEBUG] Tâche créée : id={task.id}, title={task.title}, status={task.status}, projectId={task.project_id}")
+
+        # Retourner l'objet Task directement
         return task
     finally:
         session.close()
+
+
+
+
 
 @mutation.field("createComment")
 def resolve_create_comment(_, info, content, authorId, projectId=None, taskId=None):
@@ -191,3 +206,10 @@ def resolve_comment_author(comment, *_):
 @comment_obj.field("authorId")
 def resolve_comment_authorId(comment, *_):
     return comment.author_id
+
+
+task_type = ObjectType("Task")
+
+@task_type.field("projectId")
+def resolve_task_project_id(task, *_):
+    return task.project_id
