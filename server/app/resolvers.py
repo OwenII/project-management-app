@@ -3,7 +3,7 @@ from .database import SessionLocal
 from .models import User, Project, Task, Comment
 from sqlalchemy.exc import IntegrityError
 from .auth import create_access_token
-
+import bcrypt 
 query = QueryType()
 mutation = MutationType()
 
@@ -84,27 +84,28 @@ def resolve_project_owner_id(project, *_):
     print(f"[DEBUG] Résolution de ownerId pour le projet {project.id}")
     return project.owner_id
 
-# Résolveurs pour les Mutation
+# server/app/resolvers.py
 @mutation.field("createUser")
-def resolve_create_user(_, info, email, password):
+def resolve_create_user(_, info, email, username, password):
+    import bcrypt
     session = SessionLocal()
     try:
-        existing_user = session.query(User).filter(User.email == email).first()
+        # Vérification d'email ou pseudo existants
+        existing_user = session.query(User).filter((User.email == email) | (User.username == username)).first()
         if existing_user:
-            print(f"[DEBUG] Email déjà utilisé : {email}")
-            raise Exception("L'email est déjà utilisé.")
-        user = User(email=email, password=password)
+            raise Exception("L'email ou le pseudo est déjà utilisé.")
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        user = User(email=email, username=username, password=hashed_password)
         session.add(user)
         session.commit()
         session.refresh(user)
-        print(f"[DEBUG] Utilisateur créé : {user}")
         return user
     except IntegrityError:
         session.rollback()
-        print("[DEBUG] Erreur lors de la création de l'utilisateur")
         raise Exception("Erreur lors de la création de l'utilisateur.")
     finally:
         session.close()
+
 
 @mutation.field("createProject")
 def resolve_create_project(_, info, name, description, ownerId):
@@ -157,10 +158,11 @@ def resolve_create_comment(_, info, content, authorId, projectId=None, taskId=No
 
 @mutation.field("login")
 def resolve_login(_, info, email, password):
+    import bcrypt  
     session = SessionLocal()
     try:
-        user = session.query(User).filter(User.email == email, User.password == password).first()
-        if not user:
+        user = session.query(User).filter(User.email == email).first()
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             print(f"[DEBUG] Échec de connexion pour : {email}")
             raise Exception("Identifiants invalides")
         token = create_access_token({"sub": user.email, "id": user.id})
@@ -168,6 +170,7 @@ def resolve_login(_, info, email, password):
         return {"token": token, "user": user}
     finally:
         session.close()
+
 
 task_type = ObjectType("Task")
 

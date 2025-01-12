@@ -5,6 +5,7 @@ type_defs = """
     type User {
         id: ID!
         email: String!
+        username: String!
     }
 
     type Project {
@@ -45,10 +46,10 @@ type_defs = """
 
     type Mutation {
         login(email: String!, password: String!): LoginResult!
-        createUser(email: String!, password: String!): User!
         createProject(name: String!, description: String, ownerId: Int!): Project!
         createTask(title: String!, status: String!, projectId: Int!): Task!
         createComment(content: String!, authorId: Int!, projectId: Int, taskId: Int): Comment!
+        createUser(email: String!, username: String!, password: String!): User!
     }
 """
 

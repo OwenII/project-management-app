@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
+import bcrypt
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -31,12 +32,16 @@ def init_db():
     # Ajouter un utilisateur de test
     email_utilisateur = os.getenv("EMAIL_UTILISATEUR")
     mot_de_passe_utilisateur = os.getenv("MOT_DE_PASSE_UTILISATEUR")
+    username_utilisateur = os.getenv("USERNAME_UTILISATEUR")  # Récupérer le username depuis les variables d'environnement
     utilisateur = session.query(User).filter(User.email == email_utilisateur).first()
     if not utilisateur:
-        utilisateur = User(email=email_utilisateur, password=mot_de_passe_utilisateur)
+        # Hachage du mot de passe
+        hashed_pwd = bcrypt.hashpw(mot_de_passe_utilisateur.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # Créer un nouvel utilisateur avec un username
+        utilisateur = User(email=email_utilisateur, password=hashed_pwd, username=username_utilisateur)
         session.add(utilisateur)
-        session.commit()  # On commit pour obtenir l'ID utilisateur
-    print(f"Utilisateur créé : {utilisateur.id}, {utilisateur.email}")
+        session.commit()
+    print(f"Utilisateur créé : {utilisateur.id}, {utilisateur.email}, {utilisateur.username}")
 
     # Créer un projet de test associé à l'utilisateur
     projet_test = session.query(Project).filter(Project.name == "Projet Test").first()

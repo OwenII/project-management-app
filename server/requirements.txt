@@ -5,3 +5,4 @@ databases
 SQLAlchemy
 pyjwt
 python-dotenv
+bcrypt

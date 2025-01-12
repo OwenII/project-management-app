@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+// client/src/pages/Login.js
+
+import React, { useState, useContext } from 'react';
 import { useMutation, gql } from '@apollo/client';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const LOGIN_MUTATION = gql`
   mutation Login($email: String!, $password: String!) {
@@ -9,12 +12,14 @@ const LOGIN_MUTATION = gql`
       user {
         id
         email
+        username
       }
     }
   }
 `;
 
 function Login() {
+  const { loginUser } = useContext(AuthContext);  // Accéder à la fonction loginUser du contexte
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
@@ -24,9 +29,12 @@ function Login() {
     e.preventDefault();
     try {
       const result = await login({ variables: { email, password } });
-      console.log("[DEBUG] Login result:", result);
-      const token = result.data.login.token;
-      localStorage.setItem('token', token);
+      const { token, user } = result.data.login;
+
+      // Stocker l'utilisateur et le token dans le contexte
+      loginUser(user, token);
+
+      // Rediriger vers la page d'accueil
       navigate('/');
     } catch (err) {
       console.error("[DEBUG] Login error:", err);
