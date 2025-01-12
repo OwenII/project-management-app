@@ -1,4 +1,3 @@
-#server\app\schema.py
 from ariadne import make_executable_schema
 from .resolvers import query, mutation, project_type, comment_obj
 
@@ -53,6 +52,8 @@ type_defs = """
         createTask(title: String!, status: String!, projectId: Int!): Task!
         createComment(content: String!, authorId: Int!, projectId: Int, taskId: Int): Comment!
         createUser(email: String!, username: String!, password: String!): User!
+        updateComment(id: Int!, content: String!): Comment!
+        deleteComment(id: Int!): Comment!
     }
 """
 

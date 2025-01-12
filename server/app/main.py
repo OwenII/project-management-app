@@ -1,3 +1,4 @@
+#server\app\main.py
 from fastapi import FastAPI
 from ariadne.asgi import GraphQL
 from fastapi.middleware.cors import CORSMiddleware
