@@ -14,38 +14,40 @@ function NavBar() {
 
   return (
     <nav style={{ padding: '10px', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
-      <Link to="/" style={{ marginRight: '10px' }}>Liste des Projets</Link>
-      {user ? (
-        <div style={{ display: 'inline-block', position: 'relative' }}>
-          <span 
-            onClick={() => setMenuOpen(!menuOpen)} 
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-          >
-            {user.username}
-          </span>
-          {menuOpen && (
-            <div 
-              style={{ 
-                position: 'absolute', 
-                background: '#fff', 
-                border: '1px solid #ccc', 
-                padding: '10px' 
-              }}
-            >
-              <Link to="/profile">Edit Profil</Link><br />
-              <Link to="/my-tasks">Mes Tâches</Link><br />
-              <Link to="/my-projects">Mes Projets</Link><br />
-              <button onClick={handleLogout}>Se déconnecter</button>
-            </div>
-          )}
+  <Link to="/" style={{ marginRight: '10px' }} onClick={() => setMenuOpen(false)}>
+    Liste des Projets
+  </Link>
+  {user ? (
+    <div style={{ display: 'inline-block', position: 'relative' }}>
+      <span 
+        onClick={() => setMenuOpen(!menuOpen)} 
+        style={{ cursor: 'pointer', marginRight: '10px' }}
+      >
+        {user.email}
+      </span>
+      {menuOpen && (
+        <div 
+          style={{ 
+            position: 'absolute', 
+            background: '#fff', 
+            border: '1px solid #ccc', 
+            padding: '10px' 
+          }}
+        >
+          <Link to="/profile" onClick={() => setMenuOpen(false)}>Edit Profil</Link><br />
+          <Link to="/my-tasks" onClick={() => setMenuOpen(false)}>Mes Tâches</Link><br />
+          <Link to="/my-projects" onClick={() => setMenuOpen(false)}>Mes Projets</Link><br />
+          <button onClick={handleLogout}>Se déconnecter</button>
         </div>
-      ) : (
-        <>
-          <Link to="/login" style={{ marginRight: '10px' }}>Se connecter</Link>
-          <Link to="/signup">Créer un compte</Link>
-        </>
       )}
-    </nav>
+    </div>
+  ) : (
+    <>
+      <Link to="/login" style={{ marginRight: '10px' }}>Se connecter</Link>
+      <Link to="/signup">Créer un compte</Link>
+    </>
+  )}
+</nav>
   );
 }
 
