@@ -1,132 +1,98 @@
-//client\src\components\ChatBox.js
-import React, { useState, useContext, useEffect } from 'react';
-import { useSubscription, useMutation, useQuery, gql } from '@apollo/client';
+import React, { useState, useContext } from 'react';
+import { useQuery, useMutation, gql } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
 
-const MESSAGES_QUERY = gql`
-  query GetMessages($projectId: Int!) {
-    messages(projectId: $projectId) {
+const COMMENTS_QUERY = gql`
+  query CommentsByProject($projectId: Int!) {
+    commentsByProject(projectId: $projectId) {
       id
       content
-      authorId  
-      projectId
+      author {
+        id
+        username
+      }
     }
   }
 `;
 
-const MESSAGE_SUBSCRIPTION = gql`
-  subscription OnMessageAdded($projectId: Int!) {
-    messageAdded(projectId: $projectId) {
-      id
-      content
-      authorId  
-      projectId
-    }
-  }
-`;
-
-const SEND_MESSAGE_MUTATION = gql`
-  mutation SendMessage($content: String!, $authorId: Int!, $projectId: Int!) {
+const CREATE_COMMENT_MUTATION = gql`
+  mutation CreateComment($content: String!, $authorId: Int!, $projectId: Int) {
     createComment(content: $content, authorId: $authorId, projectId: $projectId) {
       id
       content
       authorId
-      projectId
     }
   }
 `;
 
 function ChatBox({ projectId }) {
   const { user } = useContext(AuthContext);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-
-  console.log('[DEBUG] ChatBox initialized with projectId:', projectId, 'user:', user);
-
-  // Récupération initiale des messages
-  const { data: initialData, loading: queryLoading, error: queryError } = useQuery(MESSAGES_QUERY, {
+  const { loading, error, data } = useQuery(COMMENTS_QUERY, {
     variables: { projectId },
+    pollInterval: 2000, // interroge toutes les 2 secondes pour actualiser les messages
   });
+  const [createComment] = useMutation(CREATE_COMMENT_MUTATION);
+  const [message, setMessage] = useState('');
+  const [userColors, setUserColors] = useState({});
 
-  // Souscription aux nouveaux messages
-  const {
-    data: subscriptionData,
-    loading: subscriptionLoading,
-    error: subscriptionError
-  } = useSubscription(MESSAGE_SUBSCRIPTION, {
-    variables: { projectId },
-  });
-
-  // Mutation pour envoyer un nouveau message
-  const [sendMessage] = useMutation(SEND_MESSAGE_MUTATION);
-
-  // Met à jour les messages une fois les données initiales récupérées
-  useEffect(() => {
-    if (queryLoading) {
-      console.log('[DEBUG] Messages query loading...');
+  // Attribuer une couleur aléatoire pour chaque utilisateur
+  const getColorForUser = (username) => {
+    if (!userColors[username]) {
+      const color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+      setUserColors(prev => ({ ...prev, [username]: color }));
+      return color;
     }
-    if (queryError) {
-      console.error('[ERROR] Messages query error:', queryError);
-    }
-    if (initialData && initialData.messages) {
-      console.log('[DEBUG] Initial messages loaded:', initialData.messages);
-      setMessages(initialData.messages);
-    }
-  }, [initialData, queryLoading, queryError]);
+    return userColors[username];
+  };
 
-  // Ajoute les nouveaux messages reçus via la souscription
-  useEffect(() => {
-    console.log('[DEBUG] Subscription state - loading:', subscriptionLoading, 'error:', subscriptionError);
-    if (subscriptionData && subscriptionData.messageAdded) {
-      console.log('[DEBUG] Received subscription data:', subscriptionData.messageAdded);
-      setMessages((prev) => [...prev, subscriptionData.messageAdded]);
-    }
-  }, [subscriptionData, subscriptionLoading, subscriptionError]);
+  if (!user) return <p>Veuillez vous connecter pour accéder au chat.</p>;
+  if (loading) return <p>Chargement des messages...</p>;
+  if (error) return <p>Erreur lors du chargement des messages.</p>;
 
-  if (!user || !user.id) {
-    console.log('[ERROR] User is not authenticated.');
-    return <p>Connectez-vous pour accéder au chat.</p>;
-  }
+  const messages = data.commentsByProject;
 
-  // Gestion de l'envoi d'un message
-  const handleSendMessage = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newMessage) {
-      console.warn('[WARN] Cannot send an empty message.');
-      return;
-    }
+    if (message.trim() === '') return;
+  
     try {
-      console.log('[DEBUG] Sending message:', newMessage);
-      await sendMessage({ 
-        variables: { 
-          content: newMessage, 
-          authorId: parseInt(user.id, 10),
-          projectId 
+      if (!user || !user.id) {
+        console.error("Utilisateur non authentifié");
+        return;
+      }
+  
+      await createComment({
+        variables: {
+          content: message,
+          authorId: parseInt(user.id, 10), 
+          projectId: parseInt(projectId, 10),
         },
       });
-      console.log('[DEBUG] Message sent successfully.');
-      setNewMessage('');
-    } catch (error) {
-      console.error('[ERROR] Error sending message:', error);
+      setMessage('');
+    } catch (err) {
+      console.error("Erreur lors de l'envoi du message:", err);
     }
   };
+  
 
   return (
     <div>
-      <h3>Chat du projet</h3>
-      <div style={{ border: '1px solid #ccc', padding: '10px', height: '300px', overflowY: 'scroll' }}>
-        {messages.map((msg) => (
-          <p key={msg.id}>
-            <strong>[{msg.authorId}]</strong>: {msg.content}
-          </p>
-        ))}
+      <div style={{ border: '1px solid #ccc', height: '300px', overflowY: 'scroll', padding: '10px', marginBottom: '10px' }}>
+        {messages.map(msg => {
+          const username = msg.author ? msg.author.username : "Utilisateur inconnu"; // Fallback si author est null
+          return (
+            <p key={msg.id} style={{ color: getColorForUser(username) }}>
+              [{username}] : {msg.content}
+            </p>
+          );
+        })}
       </div>
-      <form onSubmit={handleSendMessage}>
+      <form onSubmit={handleSubmit}>
         <input 
           type="text" 
           placeholder="Votre message..." 
-          value={newMessage} 
-          onChange={(e) => setNewMessage(e.target.value)} 
+          value={message} 
+          onChange={e => setMessage(e.target.value)} 
           required 
         />
         <button type="submit">Envoyer</button>

@@ -1,5 +1,6 @@
+#server\app\schema.py
 from ariadne import make_executable_schema
-from .resolvers import query, mutation, project_type
+from .resolvers import query, mutation, project_type, comment_obj
 
 type_defs = """
     type User {
@@ -28,6 +29,7 @@ type_defs = """
         authorId: Int!
         projectId: Int
         taskId: Int
+        author: User   
     }
 
     type LoginResult {
@@ -42,6 +44,7 @@ type_defs = """
         task(id: Int!): Task
         users: [User!]!
         user(id: Int!): User
+        commentsByProject(projectId: Int!): [Comment!]!
     }
 
     type Mutation {
@@ -53,4 +56,4 @@ type_defs = """
     }
 """
 
-schema = make_executable_schema(type_defs, [query, mutation, project_type])
+schema = make_executable_schema(type_defs, [query, mutation, project_type, comment_obj])

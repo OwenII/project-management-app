@@ -147,29 +147,53 @@ def resolve_create_task(_, info, title, status, projectId):
 def resolve_create_comment(_, info, content, authorId, projectId=None, taskId=None):
     session = SessionLocal()
     try:
+        # Vérification de l'existence de l'utilisateur
+        author = session.query(User).filter(User.id == authorId).first()
+        if not author:
+            raise Exception(f"Aucun utilisateur trouvé avec l'ID {authorId}")
+        
+        # Créer le commentaire
         comment = Comment(content=content, author_id=authorId, project_id=projectId, task_id=taskId)
         session.add(comment)
         session.commit()
         session.refresh(comment)
-        print(f"[DEBUG] Commentaire créé : {comment}")
-        return comment
+        
+        print(f"[DEBUG] Commentaire créé : id={comment.id}, content={comment.content}, authorId={comment.author_id}")
+        
+        # Retourner un dictionnaire avec un authorId explicite
+        return {
+            'id': comment.id,
+            'content': comment.content,
+            'authorId': comment.author_id,
+            'projectId': comment.project_id,
+            'taskId': comment.task_id,
+        }
+    except Exception as e:
+        session.rollback()
+        raise Exception(f"Erreur lors de la création du commentaire: {str(e)}")
     finally:
         session.close()
 
+
+
+
 @mutation.field("login")
 def resolve_login(_, info, email, password):
-    import bcrypt  
     session = SessionLocal()
     try:
         user = session.query(User).filter(User.email == email).first()
-        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            print(f"[DEBUG] Échec de connexion pour : {email}")
+        if not user:
+            print(f"[DEBUG] Aucun utilisateur trouvé avec l'email : {email}")
+            raise Exception("Identifiants invalides")
+        if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+            print(f"[DEBUG] Mot de passe incorrect pour l'utilisateur : {email}")
             raise Exception("Identifiants invalides")
         token = create_access_token({"sub": user.email, "id": user.id})
         print(f"[DEBUG] Connexion réussie pour : {email}")
         return {"token": token, "user": user}
     finally:
         session.close()
+
 
 
 task_type = ObjectType("Task")
@@ -179,3 +203,24 @@ def resolve_task_project_id(task, *_):
     if task.project_id is None:
         print(f"[DEBUG] Tâche avec un project_id nul détectée : {task}")
     return task.project_id
+
+@query.field("commentsByProject")
+def resolve_comments_by_project(*_, projectId):
+    session = SessionLocal()
+    comments = session.query(Comment).filter(Comment.project_id == projectId).all()
+    session.close()
+    return comments
+
+comment_obj = ObjectType("Comment")
+
+@comment_obj.field("author")
+def resolve_comment_author(comment_obj, *_):
+    session = SessionLocal()
+    try:
+        author = session.query(User).filter(User.id == comment_obj.author_id).first()
+        if not author:
+            print(f"[DEBUG] Aucune correspondance pour author_id={comment_obj.author_id}")
+            return None
+        return author
+    finally:
+        session.close()

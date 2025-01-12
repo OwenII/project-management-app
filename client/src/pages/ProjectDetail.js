@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import CreateTask from '../components/CreateTask';
+import ChatBox from '../components/ChatBox';  
 
 console.log("[DEBUG] Chargement de ProjectDetail.js");
 
@@ -76,6 +77,9 @@ function ProjectDetail() {
       )}
 
       <CreateTask projectId={projectId} />
+
+      <h4>Discussion du Projet :</h4>
+      <ChatBox projectId={projectId} />  
     </div>
   );
 }
