@@ -1,3 +1,4 @@
+#server\app\schema.py
 from ariadne import make_executable_schema
 from .resolvers import query, mutation, project_type, comment_obj, task_type
 
@@ -49,12 +50,15 @@ type_defs = """
     type Mutation {
         login(email: String!, password: String!): LoginResult!
         createProject(name: String!, description: String, ownerId: Int!): Project!
+        updateProject(id: Int!, name: String, description: String): Project!
+        deleteProject(id: Int!): Boolean!
         createTask(title: String!, status: String!, projectId: Int!): Task!
         createComment(content: String!, authorId: Int!, projectId: Int, taskId: Int): Comment!
         createUser(email: String!, username: String!, password: String!): User!
         updateComment(id: Int!, content: String!): Comment!
         deleteComment(id: Int!): Comment!
     }
+
 """
 
 schema = make_executable_schema(type_defs, [query, mutation, project_type, comment_obj, task_type])

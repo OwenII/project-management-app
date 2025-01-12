@@ -1,3 +1,4 @@
+#server\app\resolvers.py
 from ariadne import QueryType, MutationType, ObjectType
 from .database import SessionLocal
 from .models import User, Project, Task, Comment
@@ -86,18 +87,34 @@ def resolve_create_user(_, info, email, username, password):
 
 @mutation.field("createProject")
 def resolve_create_project(_, info, name, description, ownerId):
+    print(f"[DEBUG] Mutation appelée avec - name: {name}, description: {description}, ownerId: {ownerId}")
+    
     session = SessionLocal()
     try:
+        print(f"[DEBUG] Conversion ownerId en entier : {ownerId}")
+        ownerId = int(ownerId)
+        
         owner = session.query(User).filter(User.id == ownerId).first()
         if not owner:
+            print("[DEBUG] Utilisateur non trouvé")
             raise Exception("Utilisateur non trouvé")
+        
+        print(f"[DEBUG] Utilisateur trouvé : {owner.id}, {owner.email}")
+
         project = Project(name=name, description=description, owner_id=owner.id)
         session.add(project)
         session.commit()
         session.refresh(project)
+
+        print(f"[DEBUG] Projet créé : id={project.id}, name={project.name}, owner_id={project.owner_id}")
         return project
+    except Exception as e:
+        print(f"[DEBUG] Erreur lors de la création du projet : {e}")
+        raise
     finally:
         session.close()
+
+
 
 @mutation.field("createTask")
 def resolve_create_task(_, info, title, status, projectId):
@@ -213,3 +230,33 @@ task_type = ObjectType("Task")
 @task_type.field("projectId")
 def resolve_task_project_id(task, *_):
     return task.project_id
+
+@mutation.field("updateProject")
+def resolve_update_project(_, info, id, name=None, description=None):
+    session = SessionLocal()
+    try:
+        project = session.query(Project).filter(Project.id == id).first()
+        if not project:
+            raise Exception("Projet non trouvé")
+        if name is not None:
+            project.name = name
+        if description is not None:
+            project.description = description
+        session.commit()
+        session.refresh(project)
+        return project
+    finally:
+        session.close()
+
+@mutation.field("deleteProject")
+def resolve_delete_project(_, info, id):
+    session = SessionLocal()
+    try:
+        project = session.query(Project).filter(Project.id == id).first()
+        if not project:
+            raise Exception("Projet non trouvé")
+        session.delete(project)
+        session.commit()
+        return True
+    finally:
+        session.close()
