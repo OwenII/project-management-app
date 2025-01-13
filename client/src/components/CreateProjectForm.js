@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { TextField, Button, Typography, Paper } from '@mui/material';
 import { CREATE_PROJECT } from '../graphql/mutations';
 
 function CreateProjectForm({ ownerId, onProjectCreated }) {
@@ -9,49 +10,54 @@ function CreateProjectForm({ ownerId, onProjectCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('[DEBUG] Soumission avec variables :', {
-      name,
-      description,
-      ownerId: parseInt(ownerId, 10) // Conversion explicite
-    });
-  
     try {
       const result = await createProject({
         variables: {
           name,
           description,
-          ownerId: parseInt(ownerId, 10), // Conversion explicite en entier
+          ownerId: parseInt(ownerId, 10),
         },
       });
-  
-      console.log('[DEBUG] Mutation réussie, résultat :', result);
+
       if (onProjectCreated) onProjectCreated(result.data.createProject);
       setName('');
       setDescription('');
     } catch (err) {
-      console.error('[DEBUG] Erreur lors de la mutation createProject :', err);
+      console.error('Erreur lors de la mutation createProject :', err);
     }
   };
-  
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>Créer un nouveau projet</h3>
-      <input
-        type="text"
-        placeholder="Nom du projet"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <button type="submit" disabled={loading}>Créer</button>
-      {error && <p>Erreur lors de la création : {error.message}</p>}
-    </form>
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Créer un nouveau projet
+      </Typography>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <TextField
+          label="Nom du projet"
+          variant="outlined"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <TextField
+          label="Description"
+          variant="outlined"
+          multiline
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Button type="submit" variant="contained" color="primary" disabled={loading}>
+          Créer
+        </Button>
+        {error && (
+          <Typography color="error">
+            Erreur lors de la création : {error.message}
+          </Typography>
+        )}
+      </form>
+    </Paper>
   );
 }
 

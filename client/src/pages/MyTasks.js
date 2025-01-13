@@ -1,32 +1,43 @@
+// client/src/pages/MyTasks.js
 import React, { useContext, useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
 import EditTask from '../components/EditTask'; 
-import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';  
+import {
+  Container,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Alert,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+} from '@mui/material';
+import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';
 
 function MyTasks() {
   const { user } = useContext(AuthContext);
-  
-  // États pour le filtrage
   const [nameFilter, setNameFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-
   const { loading, error, data } = useQuery(TASKS_PROJECTS_QUERY);
 
   if (!user) {
-    return <p>Veuillez vous connecter pour voir vos tâches.</p>;
+    return (
+      <Container>
+        <Alert severity="warning">Veuillez vous connecter pour voir vos tâches.</Alert>
+      </Container>
+    );
   }
-  if (loading) return <p>Chargement...</p>;
-  if (error) return <p>Erreur lors du chargement des tâches.</p>;
-
-  // Filtrer les projets appartenant à l'utilisateur
-  const myProjectIds = data.projects
-    .filter(project => project.ownerId === parseInt(user.id, 10))
-    .map(project => project.id);
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">Erreur lors du chargement des tâches.</Alert>;
 
   const myTasks = data.tasks;
 
-  // Appliquer les filtres sur les tâches
   const filteredTasks = myTasks.filter(task => {
     const matchesName = task.title.toLowerCase().includes(nameFilter.toLowerCase());
     const matchesStatus = statusFilter === "" || task.status === statusFilter;
@@ -34,39 +45,53 @@ function MyTasks() {
   });
 
   return (
-    <div>
-      <h2>Mes Tâches</h2>
+    <Container>
+      <Typography variant="h4" gutterBottom>Mes Tâches</Typography>
 
-      {/* Barres de filtre */}
-      <input
-        type="text"
-        placeholder="Filtrer par nom de tâche..."
-        value={nameFilter}
-        onChange={(e) => setNameFilter(e.target.value)}
-      />
-      <select 
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-      >
-        <option value="">Tous les statuts</option>
-        <option value="TODO">TODO</option>
-        <option value="IN_PROGRESS">IN_PROGRESS</option>
-        <option value="DONE">DONE</option>
-      </select>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <TextField
+          label="Filtrer par nom de tâche..."
+          variant="outlined"
+          fullWidth
+          value={nameFilter}
+          onChange={e => setNameFilter(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Status</InputLabel>
+          <Select
+            value={statusFilter}
+            label="Status"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <MenuItem value="">Tous les statuts</MenuItem>
+            <MenuItem value="TODO">TODO</MenuItem>
+            <MenuItem value="IN_PROGRESS">IN_PROGRESS</MenuItem>
+            <MenuItem value="DONE">DONE</MenuItem>
+          </Select>
+        </FormControl>
+      </Paper>
 
       {filteredTasks.length === 0 ? (
-        <p>Vous n'avez aucune tâche assignée.</p>
+        <Alert severity="info">Vous n'avez aucune tâche assignée.</Alert>
       ) : (
-        <ul>
-          {filteredTasks.map(task => (
-            <li key={task.id}>
-              {task.title} - {task.status} (Projet ID: {task.projectId})
-              <EditTask task={task} projectId={task.projectId} /> 
-            </li>
-          ))}
-        </ul>
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <List>
+            {filteredTasks.map(task => (
+              <ListItem 
+                key={task.id}
+                secondaryAction={<EditTask task={task} projectId={task.projectId} />}
+              >
+                <ListItemText 
+                  primary={`${task.title} - ${task.status}`} 
+                  secondary={`Projet ID: ${task.projectId}`} 
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
-    </div>
+    </Container>
   );
 }
 

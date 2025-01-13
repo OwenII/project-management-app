@@ -1,22 +1,22 @@
+// client/src/components/UpdateProjectForm.js
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { TextField, Button, Typography, Paper } from '@mui/material';
 import { UPDATE_PROJECT } from '../graphql/mutations';
 
 function UpdateProjectForm({ project, onProjectUpdated }) {
   const [name, setName] = useState(project.name || '');
   const [description, setDescription] = useState(project.description || '');
-  
+
   const [updateProject, { loading, error }] = useMutation(UPDATE_PROJECT);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Convertir project.id en entier pour éviter l'erreur
     const projectId = parseInt(project.id, 10);
 
     try {
       const result = await updateProject({
-        variables: { id: projectId, name, description } // Passer l'id converti
+        variables: { id: projectId, name, description },
       });
 
       if (onProjectUpdated) onProjectUpdated(result.data.updateProject);
@@ -26,23 +26,36 @@ function UpdateProjectForm({ project, onProjectUpdated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>Mettre à jour le projet</h3>
-      <input
-        type="text"
-        placeholder="Nom du projet"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <button type="submit" disabled={loading}>Mettre à jour</button>
-      {error && <p>Erreur lors de la mise à jour : {error.message}</p>}
-    </form>
+    <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Mettre à jour le projet
+      </Typography>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <TextField
+          label="Nom du projet"
+          variant="outlined"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <TextField
+          label="Description"
+          variant="outlined"
+          multiline
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Button type="submit" variant="contained" color="primary" disabled={loading}>
+          Mettre à jour
+        </Button>
+        {error && (
+          <Typography color="error">
+            Erreur lors de la mise à jour : {error.message}
+          </Typography>
+        )}
+      </form>
+    </Paper>
   );
 }
 

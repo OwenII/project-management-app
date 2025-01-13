@@ -1,27 +1,33 @@
 import React from 'react';
 import { useMutation } from '@apollo/client';
+import { IconButton } from '@mui/material';
+import { Delete } from '@mui/icons-material';
 import { DELETE_PROJECT } from '../graphql/mutations';
 
 function DeleteProjectButton({ projectId, onProjectDeleted }) {
-    // Convertir projectId en entier pour éviter les erreurs de type
-    const intProjectId = parseInt(projectId, 10);
+  const intProjectId = parseInt(projectId, 10);
 
-    const [deleteProject, { loading, error }] = useMutation(DELETE_PROJECT, {
-        variables: { id: intProjectId }, // Passer la valeur convertie
-        onCompleted: () => {
-          if (onProjectDeleted) onProjectDeleted(intProjectId);
-        }
-    });
-    
-    if (error) {
-        console.error("Error deleting project", error);
-    }
+  const [deleteProject, { loading, error }] = useMutation(DELETE_PROJECT, {
+    variables: { id: intProjectId },
+    onCompleted: () => {
+      if (onProjectDeleted) onProjectDeleted(intProjectId);
+    },
+  });
 
-    return (
-        <button onClick={() => deleteProject()} disabled={loading}>
-            Supprimer le projet
-        </button>
-    );
+  if (error) {
+    console.error("Error deleting project", error);
+  }
+
+  return (
+    <IconButton
+      color="error"
+      onClick={() => deleteProject()}
+      disabled={loading}
+      aria-label="supprimer le projet"
+    >
+      <Delete />
+    </IconButton>
+  );
 }
 
 export default DeleteProjectButton;

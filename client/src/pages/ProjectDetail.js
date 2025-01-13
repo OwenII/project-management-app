@@ -1,11 +1,20 @@
+// client/src/pages/ProjectDetail.js
 import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { useParams } from 'react-router-dom';
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+} from '@mui/material';
 import CreateTask from '../components/CreateTask';
 import ChatBox from '../components/ChatBox';  
 import EditTask from '../components/EditTask';
-
-console.log("[DEBUG] Chargement de ProjectDetail.js");
 
 const PROJECT_QUERY = gql`
   query GetProject($id: Int!) {
@@ -33,57 +42,41 @@ function ProjectDetail() {
     notifyOnNetworkStatusChange: true,
   });
 
-  if (loading) {
-    console.log("[DEBUG] Chargement des données...");
-    return <p>Chargement...</p>;
-  }
-
-  if (error) {
-    console.error("[DEBUG] Erreur lors du chargement des données :", error);
-    return <p>Erreur lors du chargement des détails du projet.</p>;
-  }
-
-  console.log("[DEBUG] Données reçues :", data);
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">Erreur lors du chargement des détails du projet.</Alert>;
 
   const { project, tasks } = data;
-
-  console.log("[DEBUG] Tâches brutes :", tasks);
-
-  const projectTasks = tasks.filter(task => {
-    console.log(
-      `[DEBUG] Comparaison : task.projectId (${task.projectId}) === projectId (${projectId})`,
-      task.projectId === projectId
-    );
-    return Number(task.projectId) === Number(projectId);
-  });
-
-  console.log("[DEBUG] Tâches après filtrage :", projectTasks);
+  const projectTasks = tasks.filter(task => Number(task.projectId) === projectId);
 
   return (
-    <div>
-      <h2>Détails du Projet</h2>
-      <h3>{project.name}</h3>
-      <p>{project.description}</p>
+    <Container>
+      <Typography variant="h4" gutterBottom>Détails du Projet</Typography>
+      <Typography variant="h5">{project.name}</Typography>
+      <Typography variant="body1" paragraph>{project.description}</Typography>
 
-      <h4>Tâches associées :</h4>
+      <Typography variant="h6">Tâches associées :</Typography>
       {projectTasks.length === 0 ? (
-        <p>Aucune tâche associée à ce projet.</p>
+        <Alert severity="info">Aucune tâche associée à ce projet.</Alert>
       ) : (
-        <ul>
-          {projectTasks.map(task => (
-            <li key={task.id}>
-              {task.title} - {task.status} 
-              <EditTask task={task} projectId={projectId} />
-            </li>
-          ))}
-        </ul>
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <List>
+            {projectTasks.map(task => (
+              <ListItem
+                key={task.id}
+                secondaryAction={<EditTask task={task} projectId={projectId} />}
+              >
+                <ListItemText primary={`${task.title} - ${task.status}`} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
 
       <CreateTask projectId={projectId} />
 
-      <h4>Commentaires du Projet :</h4>
+      <Typography variant="h6" sx={{ mt: 4 }}>Commentaires du Projet :</Typography>
       <ChatBox projectId={projectId} />  
-    </div>
+    </Container>
   );
 }
 

@@ -1,33 +1,14 @@
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
-
-const CREATE_TASK_MUTATION = gql`
-  mutation CreateTask($title: String!, $status: String!, $projectId: Int!) {
-    createTask(title: $title, status: $status, projectId: $projectId) {
-      id
-      title
-      status
-      projectId
-    }
-  }
-`;
-
-const PROJECT_QUERY = gql`
-  query GetProject($id: Int!) {
-    project(id: $id) {
-      id
-      name
-      description
-      ownerId
-    }
-    tasks {
-      id
-      title
-      status
-      projectId
-    }
-  }
-`;
+import {
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  Typography,
+  Paper,
+} from '@mui/material';
+import { CREATE_TASK_MUTATION, PROJECT_QUERY } from '../graphql/queries'; 
 
 function CreateTask({ projectId }) {
   const [title, setTitle] = useState('');
@@ -36,44 +17,46 @@ function CreateTask({ projectId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("[DEBUG] Création de tâche avec projectId :", projectId);
-  
     try {
-      const result = await createTask({ 
-        variables: { title, status, projectId }, 
+      await createTask({
+        variables: { title, status, projectId },
         refetchQueries: [
-          { query: PROJECT_QUERY, variables: { id: projectId } }
+          { query: PROJECT_QUERY, variables: { id: projectId } },
         ],
-        awaitRefetchQueries: true
+        awaitRefetchQueries: true,
       });
-  
-      console.log("[DEBUG] Résultat complet de la mutation :", result);
-      console.log("[DEBUG] Tâche créée :", result.data.createTask);
       setTitle('');
     } catch (err) {
-      console.error("[DEBUG] Erreur lors de la création de la tâche :", err);
+      console.error("Erreur lors de la création de la tâche :", err);
     }
   };
-  
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Titre de la tâche"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        required
-      />
-      <select value={status} onChange={e => setStatus(e.target.value)}>
-        <option value="TODO">À faire</option>
-        <option value="IN_PROGRESS">En cours</option>
-        <option value="DONE">Terminé</option>
-      </select>
-      <button type="submit">Ajouter la tâche</button>
-      {loading && <p>Envoi...</p>}
-      {error && <p>Erreur lors de la création de la tâche.</p>}
-    </form>
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <TextField
+          label="Titre de la tâche"
+          variant="outlined"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          required
+        />
+        <Select
+          value={status}
+          onChange={e => setStatus(e.target.value)}
+          variant="outlined"
+        >
+          <MenuItem value="TODO">À faire</MenuItem>
+          <MenuItem value="IN_PROGRESS">En cours</MenuItem>
+          <MenuItem value="DONE">Terminé</MenuItem>
+        </Select>
+        <Button type="submit" variant="contained" color="primary">
+          Ajouter la tâche
+        </Button>
+        {loading && <Typography>Envoi...</Typography>}
+        {error && <Typography color="error">Erreur lors de la création de la tâche.</Typography>}
+      </form>
+    </Paper>
   );
 }
 

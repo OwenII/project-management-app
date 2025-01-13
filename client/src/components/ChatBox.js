@@ -1,6 +1,19 @@
 import React, { useState, useContext } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import { Edit } from '@mui/icons-material';
 
 const COMMENTS_QUERY = gql`
   query CommentsByProject($projectId: Int!) {
@@ -64,8 +77,7 @@ function ChatBox({ projectId }) {
 
   const [message, setMessage] = useState('');
   const [userColors, setUserColors] = useState({});
-  
-  // Nouveaux états pour l'édition
+
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -79,20 +91,22 @@ function ChatBox({ projectId }) {
     return userColors[username];
   };
 
-  // Fonction pour afficher les mentions dans les commentaires
   function parseContent(content) {
     const parts = content.split(/(@\w+)/g);
-    return parts.map((part, index) => {
-      if (part.startsWith('@')) {
-        return <span key={index} style={{ fontWeight: 'bold', color: 'blue' }}>{part}</span>;
-      }
-      return <span key={index}>{part}</span>;
-    });
+    return parts.map((part, index) =>
+      part.startsWith('@') ? (
+        <span key={index} style={{ fontWeight: 'bold', color: 'blue' }}>
+          {part}
+        </span>
+      ) : (
+        <span key={index}>{part}</span>
+      )
+    );
   }
 
-  if (!user) return <p>Veuillez vous connecter pour accéder au chat.</p>;
-  if (loading) return <p>Chargement des messages...</p>;
-  if (error) return <p>Erreur lors du chargement des messages.</p>;
+  if (!user) return <Typography>Veuillez vous connecter pour accéder au chat.</Typography>;
+  if (loading) return <Typography>Chargement des messages...</Typography>;
+  if (error) return <Typography color="error">Erreur lors du chargement des messages.</Typography>;
 
   const messages = data.commentsByProject;
 
@@ -101,15 +115,10 @@ function ChatBox({ projectId }) {
     if (message.trim() === '') return;
 
     try {
-      if (!user || !user.id) {
-        console.error("Utilisateur non authentifié");
-        return;
-      }
-
       await createComment({
         variables: {
           content: message,
-          authorId: parseInt(user.id, 10), 
+          authorId: parseInt(user.id, 10),
           projectId: parseInt(projectId, 10),
         },
       });
@@ -120,14 +129,12 @@ function ChatBox({ projectId }) {
   };
 
   const startEditing = (msg) => {
-    console.log("startEditing:", msg);
-    setEditingCommentId(parseInt(msg.id, 10)); // Convert to integer
+    setEditingCommentId(parseInt(msg.id, 10));
     setEditingContent(msg.content);
     setShowModal(true);
   };
 
   const handleUpdate = async () => {
-    console.log("handleUpdate for comment ID:", editingCommentId);
     try {
       await updateComment({
         variables: { id: editingCommentId, content: editingContent },
@@ -141,7 +148,6 @@ function ChatBox({ projectId }) {
   };
 
   const handleDelete = async () => {
-    console.log("handleDelete for comment ID:", editingCommentId);
     try {
       await deleteComment({ variables: { id: editingCommentId } });
     } catch (err) {
@@ -152,63 +158,70 @@ function ChatBox({ projectId }) {
     setEditingContent('');
   };
 
-  console.log("user.id:", user?.id);
-  console.log("messages:", messages);
-
   return (
-    <div>
-      <div style={{ border: '1px solid #ccc', height: '300px', overflowY: 'scroll', padding: '10px', marginBottom: '10px' }}>
-        {messages.map(msg => {
+    <Container>
+      <Paper
+        variant="outlined"
+        sx={{ height: 300, overflowY: 'scroll', p: 2, mb: 2 }}
+      >
+        {messages.map((msg) => {
           const username = msg.author ? msg.author.username : "Utilisateur inconnu";
-          console.log("msg.author?.id:", msg.author?.id, "user.id:", user?.id);  // Log comparison here
           return (
-            <p key={msg.id} style={{ color: getColorForUser(username) }}>
+            <Typography
+              key={msg.id}
+              sx={{ color: getColorForUser(username), mb: 1 }}
+            >
               [{username}] : {parseContent(msg.content)}
-              {/* Afficher le bouton crayon si le commentaire appartient à l'utilisateur connecté */}
               {String(msg.author?.id) === String(user.id) && (
-                <button onClick={() => startEditing(msg)} style={{ marginLeft: '10px' }}>
-                  ✏️
-                </button>
+                <IconButton
+                  size="small"
+                  onClick={() => startEditing(msg)}
+                  sx={{ ml: 1 }}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
               )}
-            </p>
+            </Typography>
           );
         })}
-      </div>
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="text" 
-          placeholder="Votre message..." 
-          value={message} 
-          onChange={e => setMessage(e.target.value)} 
-          required 
+      </Paper>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Votre message..."
+          value={message}
+          onChange={e => setMessage(e.target.value)}
         />
-        <button type="submit">Envoyer</button>
+        <Button variant="contained" color="primary" type="submit">
+          Envoyer
+        </Button>
       </form>
 
-      {/* Fenêtre modale pour éditer/supprimer un commentaire */}
-      {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', display:'flex',
-          justifyContent:'center', alignItems:'center'
-        }}>
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '5px' }}>
-            <h3>Modifier/Supprimer le commentaire</h3>
-            <textarea 
-              rows="4" 
-              value={editingContent} 
-              onChange={e => setEditingContent(e.target.value)} 
-              style={{ width: '100%' }}
-            />
-            <div style={{ marginTop: '10px' }}>
-              <button onClick={handleUpdate}>Modifier</button>
-              <button onClick={handleDelete} style={{ marginLeft: '10px' }}>Supprimer</button>
-              <button onClick={() => setShowModal(false)} style={{ marginLeft: '10px' }}>Annuler</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <Dialog open={showModal} onClose={() => setShowModal(false)}>
+        <DialogTitle>Modifier/Supprimer le commentaire</DialogTitle>
+        <DialogContent>
+          <TextField
+            multiline
+            rows={4}
+            value={editingContent}
+            onChange={e => setEditingContent(e.target.value)}
+            fullWidth
+            variant="outlined"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUpdate} variant="contained" color="primary">
+            Modifier
+          </Button>
+          <Button onClick={handleDelete} variant="contained" color="secondary">
+            Supprimer
+          </Button>
+          <Button onClick={() => setShowModal(false)}>Annuler</Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 }
 

@@ -1,8 +1,18 @@
 // client/src/pages/MyProjects.js
 import React, { useContext } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+} from '@mui/material';
 
 const PROJECTS_QUERY = gql`
   query GetProjects {
@@ -20,32 +30,42 @@ function MyProjects() {
   const { loading, error, data } = useQuery(PROJECTS_QUERY);
 
   if (!user) {
-    return <p>Veuillez vous connecter pour voir vos projets.</p>;
+    return (
+      <Container>
+        <Alert severity="warning">Veuillez vous connecter pour voir vos projets.</Alert>
+      </Container>
+    );
   }
 
-  if (loading) return <p>Chargement...</p>;
-  if (error) return <p>Erreur lors du chargement des projets.</p>;
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">Erreur lors du chargement des projets.</Alert>;
 
-  // Filtrer les projets dont l'utilisateur est propriétaire
   const myProjects = data.projects.filter(
     project => project.ownerId === parseInt(user.id, 10)
   );
 
   return (
-    <div>
-      <h2>Mes Projets</h2>
+    <Container>
+      <Typography variant="h4" gutterBottom>Mes Projets</Typography>
       {myProjects.length === 0 ? (
-        <p>Vous n'avez aucun projet.</p>
+        <Alert severity="info">Vous n'avez aucun projet.</Alert>
       ) : (
-        <ul>
-          {myProjects.map(project => (
-            <li key={project.id}>
-              <Link to={`/projects/${project.id}`}>{project.name}</Link>
-            </li>
-          ))}
-        </ul>
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <List>
+            {myProjects.map(project => (
+              <ListItem 
+                button 
+                key={project.id} 
+                component={RouterLink} 
+                to={`/projects/${project.id}`}
+              >
+                <ListItemText primary={project.name} secondary={project.description} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
-    </div>
+    </Container>
   );
 }
 
