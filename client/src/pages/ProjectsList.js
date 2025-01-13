@@ -1,14 +1,14 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // Importation du contexte
+import { AuthContext } from '../context/AuthContext';
 import CreateProjectForm from '../components/CreateProjectForm';
 import DeleteProjectButton from '../components/DeleteProjectButton';
 import UpdateProjectForm from '../components/UpdateProjectForm';
 
 const PROJECTS_QUERY = gql`
-  query GetProjects {
-    projects {
+  query GetProjects($filter: String) {
+    projects(filter: $filter) {
       id
       name
       description
@@ -18,14 +18,23 @@ const PROJECTS_QUERY = gql`
 `;
 
 function ProjectsList() {
-  const { user } = useContext(AuthContext); // Récupération de l'utilisateur connecté
-
-  // Query Apollo
-  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY);
+  const { user } = useContext(AuthContext);
+  const [filter, setFilter] = useState("");
+  const [debouncedFilter, setDebouncedFilter] = useState(filter);
   const [editingProject, setEditingProject] = useState(null);
 
-  // Log pour voir les données de l'utilisateur
-  console.log('[DEBUG] Utilisateur connecté :', user);
+  // Met à jour la valeur filtrée avec un délai (debounce)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilter(filter);
+    }, 300); // 300ms de délai
+    return () => clearTimeout(timer); // Nettoie le timer précédent
+  }, [filter]);
+
+  // Utilisation de la variable debouncedFilter dans la requête
+  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY, {
+    variables: { filter: debouncedFilter },
+  });
 
   if (!user) {
     return <p>Veuillez vous connecter pour voir vos projets.</p>;
@@ -35,29 +44,32 @@ function ProjectsList() {
   if (error) return <p>Erreur lors du chargement des projets.</p>;
 
   const handleProjectCreated = (newProject) => {
-    console.log('[DEBUG] Nouveau projet créé :', newProject);
     refetch();
   };
 
   const handleProjectDeleted = () => {
-    console.log('[DEBUG] Projet supprimé, rafraîchissement des données');
     refetch();
   };
 
   const handleProjectUpdated = () => {
-    console.log('[DEBUG] Projet mis à jour, rafraîchissement des données');
     setEditingProject(null);
     refetch();
   };
 
-  console.log('[DEBUG] Projets récupérés :', data.projects);
-
   return (
     <div>
       <h2>Liste des Projets</h2>
-    
+      
+      {/* Champ de recherche pour le filtrage */}
+      <input
+        type="text"
+        placeholder="Filtrer par nom de projet..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+
       <CreateProjectForm
-        ownerId={parseInt(user.id, 10)} // On passe l'ownerId en tant qu'entier
+        ownerId={parseInt(user.id, 10)}
         onProjectCreated={handleProjectCreated}
       />
 
@@ -74,7 +86,9 @@ function ProjectsList() {
                 <Link to={`/projects/${project.id}`}>{project.name}</Link>
                 {project.ownerId === user.id && ( 
                   <>
-                    <button onClick={() => setEditingProject(project.id)}>Modifier</button>
+                    <button onClick={() => setEditingProject(project.id)}>
+                      Modifier
+                    </button>
                     <DeleteProjectButton
                       projectId={project.id}
                       onProjectDeleted={handleProjectDeleted}

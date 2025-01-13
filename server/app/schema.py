@@ -38,7 +38,7 @@ type_defs = """
     }
 
     type Query {
-        projects: [Project!]!
+        projects(filter: String): [Project!]!
         project(id: Int!): Project
         tasks: [Task!]!
         task(id: Int!): Task

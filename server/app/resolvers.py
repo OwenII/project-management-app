@@ -11,11 +11,16 @@ mutation = MutationType()
 
 # Résolveurs pour Query
 @query.field("projects")
-def resolve_projects(*_):
+def resolve_projects(*_, filter=None):
     session = SessionLocal()
-    projects = session.query(Project).all()
-    session.close()
-    return projects
+    try:
+        if filter:
+            projects = session.query(Project).filter(Project.name.contains(filter)).all()
+        else:
+           projects = session.query(Project).all()
+        return projects
+    finally:
+        session.close()
 
 @query.field("project")
 def resolve_project(*_, id):

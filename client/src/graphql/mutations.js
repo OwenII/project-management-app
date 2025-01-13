@@ -1,3 +1,4 @@
+//client\src\graphql\mutations.js
 import { gql } from '@apollo/client';
 
 export const CREATE_PROJECT = gql`
