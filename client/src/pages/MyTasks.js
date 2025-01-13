@@ -18,7 +18,7 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
-import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';
+import { TASKS_PROJECTS_QUERY } from '../graphql/queries';
 
 function MyTasks() {
   const { user } = useContext(AuthContext);

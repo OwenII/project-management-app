@@ -1,6 +1,6 @@
 // client/src/pages/Profile.js
 import React, { useContext, useState } from 'react';
-import { useMutation, gql } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,22 +11,7 @@ import {
   Paper,
   Alert,
 } from '@mui/material';
-
-const UPDATE_USER = gql`
-  mutation UpdateUser($id: Int!, $username: String!) {
-    updateUser(id: $id, username: $username) {
-      id
-      username
-      email
-    }
-  }
-`;
-
-const DELETE_USER = gql`
-  mutation DeleteUser($id: Int!) {
-    deleteUser(id: $id)
-  }
-`;
+import { UPDATE_USER, DELETE_USER } from '../graphql/mutations';
 
 function Profile() {
   const { user, logoutUser } = useContext(AuthContext);

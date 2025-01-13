@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { UPDATE_TASK, DELETE_TASK } from '../graphql/mutations';
-import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';
+import { TASKS_PROJECTS_QUERY } from '../graphql/queries';
 
 function EditTask({ task, projectId }) {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,6 +1,6 @@
 // client/src/pages/Signup.js
 import React, { useState } from 'react';
-import { useMutation, gql } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -11,16 +11,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-
-const SIGNUP_MUTATION = gql`
-  mutation SignUp($email: String!, $username: String!, $password: String!) {
-    createUser(email: $email, username: $username, password: $password) {
-      id
-      email
-      username
-    }
-  }
-`;
+import { SIGNUP_MUTATION } from '../graphql/mutations';
 
 function Signup() {
   const [email, setEmail] = useState('');

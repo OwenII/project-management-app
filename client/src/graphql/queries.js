@@ -1,15 +1,5 @@
+//client\src\graphql\queries.js
 import { gql } from '@apollo/client';
-
-export const CREATE_TASK_MUTATION = gql`
-  mutation CreateTask($title: String!, $status: String!, $projectId: Int!) {
-    createTask(title: $title, status: $status, projectId: $projectId) {
-      id
-      title
-      status
-      projectId
-    }
-  }
-`;
 
 export const PROJECT_QUERY = gql`
   query GetProject($id: Int!) {
@@ -24,6 +14,56 @@ export const PROJECT_QUERY = gql`
       title
       status
       projectId
+    }
+  }
+`;
+
+export const TASKS_PROJECTS_QUERY = gql`
+  query GetTasksAndProjects {
+    tasks {
+      id
+      title
+      status
+      projectId
+    }
+    projects {
+      id
+      ownerId
+    }
+  }
+`;
+
+export const COMMENTS_QUERY = gql`
+  query CommentsByProject($projectId: Int!) {
+    commentsByProject(projectId: $projectId) {
+      id
+      content
+      author {
+        id
+        username
+      }
+    }
+  }
+`;
+
+export const PROJECTS_QUERY = gql`
+  query GetProjects {
+    projects {
+      id
+      name
+      description
+      ownerId
+    }
+  }
+`;
+
+export const PROJECTS_QUERY_FILTER = gql`
+  query GetProjects($filter: String) {
+    projects(filter: $filter) {
+      id
+      name
+      description
+      ownerId
     }
   }
 `;

@@ -1,6 +1,6 @@
 // client/src/pages/ProjectDetail.js
 import React from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -15,23 +15,7 @@ import {
 import CreateTask from '../components/CreateTask';
 import ChatBox from '../components/ChatBox';  
 import EditTask from '../components/EditTask';
-
-const PROJECT_QUERY = gql`
-  query GetProject($id: Int!) {
-    project(id: $id) {
-      id
-      name
-      description
-      ownerId
-    }
-    tasks {
-      id
-      title
-      status
-      projectId
-    }
-  }
-`;
+import { PROJECT_QUERY } from '../graphql/queries';
 
 function ProjectDetail() {
   const { id } = useParams();

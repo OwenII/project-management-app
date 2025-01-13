@@ -1,5 +1,6 @@
+//client\src\pages\ProjectsList.js
 import React, { useContext, useState, useEffect } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import CreateProjectForm from '../components/CreateProjectForm';
@@ -18,17 +19,7 @@ import {
   Snackbar,
 } from '@mui/material';
 import { Edit } from '@mui/icons-material';
-
-const PROJECTS_QUERY = gql`
-  query GetProjects($filter: String) {
-    projects(filter: $filter) {
-      id
-      name
-      description
-      ownerId
-    }
-  }
-`;
+import { PROJECTS_QUERY_FILTER } from '../graphql/queries';
 
 function ProjectsList() {
   const { user } = useContext(AuthContext);
@@ -44,7 +35,7 @@ function ProjectsList() {
     return () => clearTimeout(timer);
   }, [filter]);
 
-  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY, {
+  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY_FILTER, {
     variables: { filter: debouncedFilter },
   });
 

@@ -1,6 +1,6 @@
 // client/src/pages/MyProjects.js
 import React, { useContext } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
@@ -13,17 +13,7 @@ import {
   ListItemText,
   Paper,
 } from '@mui/material';
-
-const PROJECTS_QUERY = gql`
-  query GetProjects {
-    projects {
-      id
-      name
-      description
-      ownerId
-    }
-  }
-`;
+import { PROJECTS_QUERY } from '../graphql/queries';
 
 function MyProjects() {
   const { user } = useContext(AuthContext);

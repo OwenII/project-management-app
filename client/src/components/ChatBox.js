@@ -1,5 +1,6 @@
+//client\src\components\ChatBox.js
 import React, { useState, useContext, useEffect } from 'react';
-import { useQuery, useMutation, gql } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
 import {
   Container,
@@ -15,54 +16,8 @@ import {
 } from '@mui/material';
 import { Edit } from '@mui/icons-material';
 
-const COMMENTS_QUERY = gql`
-  query CommentsByProject($projectId: Int!) {
-    commentsByProject(projectId: $projectId) {
-      id
-      content
-      author {
-        id
-        username
-      }
-    }
-  }
-`;
-
-const CREATE_COMMENT_MUTATION = gql`
-  mutation CreateComment($content: String!, $authorId: Int!, $projectId: Int) {
-    createComment(content: $content, authorId: $authorId, projectId: $projectId) {
-      id
-      content
-      authorId
-    }
-  }
-`;
-
-const UPDATE_COMMENT_MUTATION = gql`
-  mutation UpdateComment($id: Int!, $content: String!) {
-    updateComment(id: $id, content: $content) {
-      id
-      content
-      author {
-        id
-        username
-      }
-    }
-  }
-`;
-
-const DELETE_COMMENT_MUTATION = gql`
-  mutation DeleteComment($id: Int!) {
-    deleteComment(id: $id) {
-      id
-      content
-      author {
-        id
-        username
-      }
-    }
-  }
-`;
+import { COMMENTS_QUERY } from '../graphql/queries';
+import { CREATE_COMMENT_MUTATION, UPDATE_COMMENT_MUTATION, DELETE_COMMENT_MUTATION } from '../graphql/mutations';
 
 function ChatBox({ projectId }) {
   const { user } = useContext(AuthContext);

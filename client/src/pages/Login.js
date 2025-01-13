@@ -1,6 +1,6 @@
 // client/src/components/Login.js
 import React, { useState, useContext } from 'react';
-import { useMutation, gql } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
@@ -11,19 +11,7 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
-
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-      user {
-        id
-        email
-        username
-      }
-    }
-  }
-`;
+import { LOGIN_MUTATION } from '../graphql/mutations';
 
 function Login() {
   const { loginUser } = useContext(AuthContext);

@@ -8,7 +8,9 @@ import {
   Typography,
   Paper,
 } from '@mui/material';
-import { CREATE_TASK_MUTATION, PROJECT_QUERY } from '../graphql/queries'; 
+import { PROJECT_QUERY } from '../graphql/queries'; 
+import { CREATE_TASK_MUTATION } from '../graphql/mutations';
+
 
 function CreateTask({ projectId }) {
   const [title, setTitle] = useState('');
