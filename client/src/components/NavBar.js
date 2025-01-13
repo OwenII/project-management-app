@@ -35,7 +35,7 @@ function NavBar() {
           }}
         >
           <Link to="/profile" onClick={() => setMenuOpen(false)}>Edit Profil</Link><br />
-          <Link to="/my-tasks" onClick={() => setMenuOpen(false)}>Mes Tâches</Link><br />
+          <Link to="/my-tasks" onClick={() => setMenuOpen(false)}>Toutes les Tâches</Link><br />
           <Link to="/my-projects" onClick={() => setMenuOpen(false)}>Mes Projets</Link><br />
           <button onClick={handleLogout}>Se déconnecter</button>
         </div>
