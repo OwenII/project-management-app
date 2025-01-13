@@ -5,7 +5,6 @@ import { AuthContext } from '../context/AuthContext';
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   Menu,
   MenuItem,

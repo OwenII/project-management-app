@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
 import {
@@ -66,9 +66,9 @@ const DELETE_COMMENT_MUTATION = gql`
 
 function ChatBox({ projectId }) {
   const { user } = useContext(AuthContext);
-  const { loading, error, data } = useQuery(COMMENTS_QUERY, {
+  const { loading, error, data, startPolling, stopPolling } = useQuery(COMMENTS_QUERY, {
     variables: { projectId },
-    pollInterval: 2000,
+    pollInterval: 2000, // Intervalles de 2 secondes
   });
 
   const [createComment] = useMutation(CREATE_COMMENT_MUTATION);
@@ -85,7 +85,7 @@ function ChatBox({ projectId }) {
   const getColorForUser = (username) => {
     if (!userColors[username]) {
       const color = '#' + Math.floor(Math.random() * 16777215).toString(16);
-      setUserColors(prev => ({ ...prev, [username]: color }));
+      setUserColors((prev) => ({ ...prev, [username]: color }));
       return color;
     }
     return userColors[username];
@@ -103,6 +103,24 @@ function ChatBox({ projectId }) {
       )
     );
   }
+
+  // Gestion de la visibilité de la page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling(2000); // Relancer le polling toutes les 2 secondes
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopPolling(); // Arrêter le polling en cas de démontage
+    };
+  }, [startPolling, stopPolling]);
 
   if (!user) return <Typography>Veuillez vous connecter pour accéder au chat.</Typography>;
   if (loading) return <Typography>Chargement des messages...</Typography>;
@@ -165,7 +183,7 @@ function ChatBox({ projectId }) {
         sx={{ height: 300, overflowY: 'scroll', p: 2, mb: 2 }}
       >
         {messages.map((msg) => {
-          const username = msg.author ? msg.author.username : "Utilisateur inconnu";
+          const username = msg.author ? msg.author.username : 'Utilisateur inconnu';
           return (
             <Typography
               key={msg.id}
@@ -192,7 +210,7 @@ function ChatBox({ projectId }) {
           variant="outlined"
           placeholder="Votre message..."
           value={message}
-          onChange={e => setMessage(e.target.value)}
+          onChange={(e) => setMessage(e.target.value)}
         />
         <Button variant="contained" color="primary" type="submit">
           Envoyer
@@ -206,7 +224,7 @@ function ChatBox({ projectId }) {
             multiline
             rows={4}
             value={editingContent}
-            onChange={e => setEditingContent(e.target.value)}
+            onChange={(e) => setEditingContent(e.target.value)}
             fullWidth
             variant="outlined"
           />

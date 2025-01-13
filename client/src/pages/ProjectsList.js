@@ -13,12 +13,11 @@ import {
   Card,
   CardContent,
   CardActions,
-  Button,
   IconButton,
   CircularProgress,
   Snackbar,
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit } from '@mui/icons-material';
 
 const PROJECTS_QUERY = gql`
   query GetProjects($filter: String) {
@@ -117,36 +116,40 @@ function ProjectsList() {
         <Grid container spacing={3} style={{ marginTop: '1rem' }}>
           {data.projects.map((project) => (
             <Grid item xs={12} sm={6} md={4} key={project.id}>
-              <Card>
+            <Link to={`/projects/${project.id}`} style={{ textDecoration: 'none' }}>
+              <Card
+                sx={{
+                  cursor: 'pointer',
+                  '&:hover': {
+                    boxShadow: 4, // Ajouter un effet visuel au survol si souhaité
+                  },
+                }}
+              >
                 <CardContent>
                   <Typography variant="h5" component="div">
-                    <Link to={`/projects/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      {project.name}
-                    </Link>
+                    {project.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {project.description}
                   </Typography>
                 </CardContent>
-                {project.ownerId === user.id && (
-                  <CardActions>
-                    <IconButton color="primary" onClick={() => setEditingProject(project.id)}>
-                      <Edit />
-                    </IconButton>
-                    <DeleteProjectButton
-                      projectId={project.id}
-                      onProjectDeleted={handleProjectDeleted}
-                    />
-                  </CardActions>
-                )}
-                {editingProject === project.id && (
-                  <UpdateProjectForm
-                    project={project}
-                    onProjectUpdated={handleProjectUpdated}
-                  />
-                )}
               </Card>
-            </Grid>
+            </Link>
+            {project.ownerId === user.id && (
+              <CardActions>
+                <IconButton color="primary" onClick={() => setEditingProject(project.id)}>
+                  <Edit />
+                </IconButton>
+                <DeleteProjectButton
+                  projectId={project.id}
+                  onProjectDeleted={handleProjectDeleted}
+                />
+              </CardActions>
+            )}
+            {editingProject === project.id && (
+              <UpdateProjectForm project={project} onProjectUpdated={handleProjectUpdated} />
+            )}
+          </Grid>          
           ))}
         </Grid>
       )}
