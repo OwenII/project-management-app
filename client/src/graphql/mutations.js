@@ -27,3 +27,20 @@ export const DELETE_PROJECT = gql`
     deleteProject(id: $id)
   }
 `;
+
+export const UPDATE_TASK = gql`
+ mutation UpdateTask($id: Int!, $title: String, $status: String) {
+    updateTask(id: $id, title: $title, status: $status) {
+     id
+     title
+      status
+      projectId
+    }
+  }
+`;
+
+export const DELETE_TASK = gql`
+  mutation DeleteTask($id: Int!) {
+    deleteTask(id: $id)
+  }
+`;

@@ -59,6 +59,8 @@ type_defs = """
         deleteComment(id: Int!): Comment!
         updateUser(id: Int!, username: String!): User!
         deleteUser(id: Int!): Boolean!
+        updateTask(id: Int!, title: String, status: String): Task!
+        deleteTask(id: Int!): Boolean!
     }
 
 """

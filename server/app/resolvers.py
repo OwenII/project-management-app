@@ -287,3 +287,35 @@ def resolve_delete_user(_, info, id):
         return True
     finally:
         session.close()
+
+@mutation.field("updateTask")
+def resolve_update_task(_, info, id, title=None, status=None):
+    session = SessionLocal()
+    try:
+        id = int(id)  
+        task = session.query(Task).filter(Task.id == id).first()
+        if not task:
+            raise Exception("Tâche non trouvée")
+        if title is not None:
+            task.title = title
+        if status is not None:
+            task.status = status
+        session.commit()
+        session.refresh(task)
+        return task
+    finally:
+        session.close()
+
+@mutation.field("deleteTask")
+def resolve_delete_task(_, info, id):
+    session = SessionLocal()
+    try:
+        id = int(id) 
+        task = session.query(Task).filter(Task.id == id).first()
+        if not task:
+            raise Exception("Tâche non trouvée")
+        session.delete(task)
+        session.commit()
+        return True
+    finally:
+        session.close()

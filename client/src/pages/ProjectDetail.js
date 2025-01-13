@@ -3,6 +3,7 @@ import { useQuery, gql } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import CreateTask from '../components/CreateTask';
 import ChatBox from '../components/ChatBox';  
+import EditTask from '../components/EditTask';
 
 console.log("[DEBUG] Chargement de ProjectDetail.js");
 
@@ -69,10 +70,12 @@ function ProjectDetail() {
         <p>Aucune tâche associée à ce projet.</p>
       ) : (
         <ul>
-          {projectTasks.map(task => {
-            console.log("[DEBUG] Rendu de la tâche :", task);
-            return <li key={task.id}>{task.title} - {task.status}</li>;
-          })}
+          {projectTasks.map(task => (
+            <li key={task.id}>
+              {task.title} - {task.status} 
+              <EditTask task={task} projectId={projectId} />
+            </li>
+          ))}
         </ul>
       )}
 
