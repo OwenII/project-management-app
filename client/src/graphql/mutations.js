@@ -44,3 +44,18 @@ export const DELETE_TASK = gql`
     deleteTask(id: $id)
   }
 `;
+
+export const TASKS_PROJECTS_QUERY = gql`
+  query GetTasksAndProjects {
+    tasks {
+      id
+      title
+      status
+      projectId
+    }
+    projects {
+      id
+      ownerId
+    }
+  }
+`;

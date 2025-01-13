@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 import { UPDATE_TASK, DELETE_TASK } from '../graphql/mutations';
 import { gql as apolloGql } from '@apollo/client';
+import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';  
 
 const PROJECT_QUERY = apolloGql`
   query GetProject($id: Int!) {
@@ -33,7 +34,7 @@ function EditTask({ task, projectId }) {
     try {
       await updateTask({
         variables: { id: parseInt(task.id, 10), title, status },
-        refetchQueries: [{ query: PROJECT_QUERY, variables: { id: projectId } }],
+        refetchQueries: [{ query: TASKS_PROJECTS_QUERY }], 
         awaitRefetchQueries: true,
       });
       setIsOpen(false);
@@ -42,19 +43,22 @@ function EditTask({ task, projectId }) {
     }
   };
   
-
   const handleDelete = async () => {
-    try {
-      await deleteTask({
-        variables: { id: parseInt(task.id, 10) },
-        refetchQueries: [{ query: PROJECT_QUERY, variables: { id: projectId } }],
-        awaitRefetchQueries: true,
-      });
-      setIsOpen(false);
-    } catch (err) {
-      console.error("[DEBUG] Erreur lors de la suppression :", err);
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette tâche ?")) {
+      try {
+        await deleteTask({
+          variables: { id: parseInt(task.id, 10) },
+          refetchQueries: [{ query: TASKS_PROJECTS_QUERY }],
+          awaitRefetchQueries: true,
+        });
+        setIsOpen(false);
+      } catch (err) {
+        console.error("[DEBUG] Erreur lors de la suppression :", err);
+      }
     }
   };
+  
+  
   
 
   return (

@@ -1,22 +1,8 @@
-// client/src/pages/MyTasks.js
 import React, { useContext } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { AuthContext } from '../context/AuthContext';
-
-const TASKS_PROJECTS_QUERY = gql`
-  query GetTasksAndProjects {
-    tasks {
-      id
-      title
-      status
-      projectId
-    }
-    projects {
-      id
-      ownerId
-    }
-  }
-`;
+import EditTask from '../components/EditTask'; 
+import { TASKS_PROJECTS_QUERY } from '../graphql/mutations';  
 
 function MyTasks() {
   const { user } = useContext(AuthContext);
@@ -34,8 +20,8 @@ function MyTasks() {
     .filter(project => project.ownerId === parseInt(user.id, 10))
     .map(project => project.id);
 
-  // Filtrer les tâches associées aux projets de l'utilisateur
-  const myTasks = data.tasks.filter(task => myProjectIds.includes(task.projectId));
+
+  const myTasks = data.tasks;
 
   return (
     <div>
@@ -47,6 +33,7 @@ function MyTasks() {
           {myTasks.map(task => (
             <li key={task.id}>
               {task.title} - {task.status} (Projet ID: {task.projectId})
+              <EditTask task={task} projectId={task.projectId} /> 
             </li>
           ))}
         </ul>
