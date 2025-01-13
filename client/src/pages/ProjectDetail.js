@@ -81,7 +81,7 @@ function ProjectDetail() {
 
       <CreateTask projectId={projectId} />
 
-      <h4>Discussion du Projet :</h4>
+      <h4>Commentaires du Projet :</h4>
       <ChatBox projectId={projectId} />  
     </div>
   );

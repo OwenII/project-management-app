@@ -203,13 +203,10 @@ def resolve_login(_, info, email, password):
     try:
         user = session.query(User).filter(User.email == email).first()
         if not user:
-            print(f"[DEBUG] Aucun utilisateur trouvé avec l'email : {email}")
-            raise Exception("Identifiants invalides")
+            raise Exception("Email ou mot de passe incorrect")
         if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            print(f"[DEBUG] Mot de passe incorrect pour l'utilisateur : {email}")
-            raise Exception("Identifiants invalides")
+            raise Exception("Email ou mot de passe incorrect")
         token = create_access_token({"sub": user.email, "id": user.id})
-        print(f"[DEBUG] Connexion réussie pour : {email}")
         return {"token": token, "user": user}
     finally:
         session.close()

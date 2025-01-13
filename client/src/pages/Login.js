@@ -1,5 +1,3 @@
-// client/src/pages/Login.js
-
 import React, { useState, useContext } from 'react';
 import { useMutation, gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
@@ -19,14 +17,17 @@ const LOGIN_MUTATION = gql`
 `;
 
 function Login() {
-  const { loginUser } = useContext(AuthContext);  // Accéder à la fonction loginUser du contexte
+  const { loginUser } = useContext(AuthContext); // Accéder à la fonction loginUser du contexte
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
+  const [errorMessage, setErrorMessage] = useState(''); // État pour stocker les messages d'erreur
+  const [login, { loading }] = useMutation(LOGIN_MUTATION);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage(''); // Réinitialiser le message d'erreur
+
     try {
       const result = await login({ variables: { email, password } });
       const { token, user } = result.data.login;
@@ -38,6 +39,15 @@ function Login() {
       navigate('/');
     } catch (err) {
       console.error("[DEBUG] Login error:", err);
+
+      // Vérifier si des erreurs spécifiques sont retournées
+      if (err.graphQLErrors && err.graphQLErrors.length > 0) {
+        // Récupérer le message de la première erreur GraphQL
+        setErrorMessage(err.graphQLErrors[0].message);
+      } else {
+        // Erreur générique
+        setErrorMessage("Une erreur s'est produite. Veuillez réessayer.");
+      }
     }
   };
 
@@ -59,10 +69,13 @@ function Login() {
           onChange={e => setPassword(e.target.value)}
           required
         />
-        <button type="submit">Se connecter</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Chargement...' : 'Se connecter'}
+        </button>
       </form>
-      {loading && <p>Chargement...</p>}
-      {error && <p>Erreur de connexion</p>}
+
+      {/* Affichage du message d'erreur */}
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
     </div>
   );
 }
