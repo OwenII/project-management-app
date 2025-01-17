@@ -1,27 +1,30 @@
-import React, { useContext, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
-import { Link as RouterLink } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+// client/src/pages/MyTasks.js
+import React, { useContext, useState, useEffect } from 'react';  // Importation de React et des hooks nécessaires
+import { useQuery } from '@apollo/client';  // Importation du hook useQuery pour effectuer des requêtes GraphQL
+import { AuthContext } from '../context/AuthContext';  // Importation du contexte d'authentification
+import EditTask from '../components/EditTask';  // Importation du composant pour éditer les tâches
 import {
   Container,
   Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   CircularProgress,
   Alert,
+  Paper,
   List,
   ListItem,
   ListItemText,
-  Paper,
-} from '@mui/material';
-import { PROJECTS_QUERY } from '../graphql/queries';
+} from '@mui/material';  // Importation des composants Material UI
+import { TASKS_PROJECTS_QUERY } from '../graphql/queries';  // Importation de la requête GraphQL
 
-function MyProjects() {
-  // Récupère l'utilisateur depuis le contexte d'authentification
-  const { user } = useContext(AuthContext);
-
-  // Exécute la requête GraphQL pour récupérer les projets
-  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY, {
-    notifyOnNetworkStatusChange: true, // Permet d'obtenir des notifications de changement d'état réseau
-  });
+function MyTasks() {
+  const { user } = useContext(AuthContext);  // Récupération de l'utilisateur à partir du contexte d'authentification
+  const [nameFilter, setNameFilter] = useState("");  // État pour filtrer par nom de tâche
+  const [statusFilter, setStatusFilter] = useState("");  // État pour filtrer par statut de tâche
+  const { loading, error, data, refetch } = useQuery(TASKS_PROJECTS_QUERY);  // Exécution de la requête GraphQL pour récupérer les tâches et projets
 
   // Utilise un effet secondaire pour forcer la mise à jour de la requête dès que le composant est monté
   useEffect(() => {
@@ -30,47 +33,75 @@ function MyProjects() {
     }
   }, [user, refetch]);  // L'effet s'exécute uniquement si l'utilisateur change
 
-  // Si l'utilisateur n'est pas connecté, on affiche un message d'avertissement
+  // Si l'utilisateur n'est pas connecté, afficher un message d'avertissement
   if (!user) {
     return (
       <Container>
-        <Alert severity="warning">Veuillez vous connecter pour voir vos projets.</Alert>
+        <Alert severity="warning">Veuillez vous connecter pour voir vos tâches.</Alert>
       </Container>
     );
   }
 
-  // Si la requête est en cours de chargement, on affiche un indicateur de progression
+  // Si les données sont en cours de chargement, afficher un indicateur de chargement
   if (loading) return <CircularProgress />;
 
-  // Si une erreur survient pendant la récupération des projets, on l'affiche
-  if (error) return <Alert severity="error">Erreur lors du chargement des projets.</Alert>;
+  // Si une erreur se produit lors du chargement des données, afficher un message d'erreur
+  if (error) return <Alert severity="error">Erreur lors du chargement des tâches.</Alert>;
 
-  // Filtre les projets pour n'afficher que ceux appartenant à l'utilisateur
-  const myProjects = data.projects.filter(
-    project => project.ownerId === parseInt(user.id, 10)
-  );
+  const myTasks = data.tasks;  // Récupération des tâches depuis la réponse de la requête GraphQL
+
+  // Filtrer les tâches en fonction des filtres (nom et statut)
+  const filteredTasks = myTasks.filter(task => {
+    const matchesName = task.title.toLowerCase().includes(nameFilter.toLowerCase());  // Vérifie si le titre de la tâche correspond au filtre de nom
+    const matchesStatus = statusFilter === "" || task.status === statusFilter;  // Vérifie si le statut de la tâche correspond au filtre de statut
+    return matchesName && matchesStatus;  // Retourne vrai si la tâche correspond aux deux filtres
+  });
 
   return (
     <Container>
-      {/* Titre de la page */}
-      <Typography variant="h4" gutterBottom>Mes Projets</Typography>
+      <Typography variant="h4" gutterBottom>Mes Tâches</Typography>  {/* Titre de la page */}
 
-      {/* Si l'utilisateur n'a aucun projet, affiche un message d'information */}
-      {myProjects.length === 0 ? (
-        <Alert severity="info">Vous n'avez aucun projet.</Alert>
+      {/* Section des filtres */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <TextField
+          label="Filtrer par nom de tâche..."
+          variant="outlined"
+          fullWidth
+          value={nameFilter}
+          onChange={e => setNameFilter(e.target.value)}  // Met à jour le filtre de nom
+          sx={{ mb: 2 }}
+        />
+        <FormControl fullWidth variant="outlined">
+          <InputLabel>Status</InputLabel>
+          <Select
+            value={statusFilter}
+            label="Status"
+            onChange={(e) => setStatusFilter(e.target.value)}  // Met à jour le filtre de statut
+          >
+            <MenuItem value="">Tous les statuts</MenuItem>
+            <MenuItem value="TODO">TODO</MenuItem>
+            <MenuItem value="IN_PROGRESS">IN_PROGRESS</MenuItem>
+            <MenuItem value="DONE">DONE</MenuItem>
+          </Select>
+        </FormControl>
+      </Paper>
+
+      {/* Si aucune tâche n'est trouvée après le filtrage, afficher un message d'information */}
+      {filteredTasks.length === 0 ? (
+        <Alert severity="info">Vous n'avez aucune tâche assignée.</Alert>
       ) : (
+        // Si des tâches sont disponibles, les afficher dans une liste
         <Paper variant="outlined" sx={{ p: 2 }}>
-          {/* Liste des projets */}
           <List>
-            {myProjects.map(project => (
+            {filteredTasks.map(task => (
               <ListItem 
-                button 
-                key={project.id} 
-                component={RouterLink} 
-                to={`/projects/${project.id}`}
+                key={task.id}
+                secondaryAction={<EditTask task={task} projectId={task.projectId} />}  // Permet d'éditer chaque tâche
               >
-                {/* Affichage du nom et de la description de chaque projet */}
-                <ListItemText primary={project.name} secondary={project.description} />
+                <ListItemText 
+                  primary={`${task.title} - ${task.status}`}  // Affiche le titre et le statut de la tâche
+                  secondary={`Projet ID: ${task.projectId}`}  // Affiche l'ID du projet associé à la tâche
+                />
               </ListItem>
             ))}
           </List>
@@ -80,4 +111,4 @@ function MyProjects() {
   );
 }
 
-export default MyProjects;
+export default MyTasks;
