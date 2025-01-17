@@ -1,91 +1,76 @@
-// client/src/pages/MyTasks.js
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
+import { Link as RouterLink } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import EditTask from '../components/EditTask'; 
 import {
   Container,
   Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   CircularProgress,
   Alert,
-  Paper,
   List,
   ListItem,
   ListItemText,
+  Paper,
 } from '@mui/material';
-import { TASKS_PROJECTS_QUERY } from '../graphql/queries';
+import { PROJECTS_QUERY } from '../graphql/queries';
 
-function MyTasks() {
+function MyProjects() {
+  // Récupère l'utilisateur depuis le contexte d'authentification
   const { user } = useContext(AuthContext);
-  const [nameFilter, setNameFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const { loading, error, data } = useQuery(TASKS_PROJECTS_QUERY);
 
+  // Exécute la requête GraphQL pour récupérer les projets
+  const { loading, error, data, refetch } = useQuery(PROJECTS_QUERY, {
+    notifyOnNetworkStatusChange: true, // Permet d'obtenir des notifications de changement d'état réseau
+  });
+
+  // Utilise un effet secondaire pour forcer la mise à jour de la requête dès que le composant est monté
+  useEffect(() => {
+    if (user) {
+      refetch();  // Recharger les données dès que l'utilisateur est défini
+    }
+  }, [user, refetch]);  // L'effet s'exécute uniquement si l'utilisateur change
+
+  // Si l'utilisateur n'est pas connecté, on affiche un message d'avertissement
   if (!user) {
     return (
       <Container>
-        <Alert severity="warning">Veuillez vous connecter pour voir vos tâches.</Alert>
+        <Alert severity="warning">Veuillez vous connecter pour voir vos projets.</Alert>
       </Container>
     );
   }
+
+  // Si la requête est en cours de chargement, on affiche un indicateur de progression
   if (loading) return <CircularProgress />;
-  if (error) return <Alert severity="error">Erreur lors du chargement des tâches.</Alert>;
 
-  const myTasks = data.tasks;
+  // Si une erreur survient pendant la récupération des projets, on l'affiche
+  if (error) return <Alert severity="error">Erreur lors du chargement des projets.</Alert>;
 
-  const filteredTasks = myTasks.filter(task => {
-    const matchesName = task.title.toLowerCase().includes(nameFilter.toLowerCase());
-    const matchesStatus = statusFilter === "" || task.status === statusFilter;
-    return matchesName && matchesStatus;
-  });
+  // Filtre les projets pour n'afficher que ceux appartenant à l'utilisateur
+  const myProjects = data.projects.filter(
+    project => project.ownerId === parseInt(user.id, 10)
+  );
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>Mes Tâches</Typography>
+      {/* Titre de la page */}
+      <Typography variant="h4" gutterBottom>Mes Projets</Typography>
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <TextField
-          label="Filtrer par nom de tâche..."
-          variant="outlined"
-          fullWidth
-          value={nameFilter}
-          onChange={e => setNameFilter(e.target.value)}
-          sx={{ mb: 2 }}
-        />
-        <FormControl fullWidth variant="outlined">
-          <InputLabel>Status</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Status"
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <MenuItem value="">Tous les statuts</MenuItem>
-            <MenuItem value="TODO">TODO</MenuItem>
-            <MenuItem value="IN_PROGRESS">IN_PROGRESS</MenuItem>
-            <MenuItem value="DONE">DONE</MenuItem>
-          </Select>
-        </FormControl>
-      </Paper>
-
-      {filteredTasks.length === 0 ? (
-        <Alert severity="info">Vous n'avez aucune tâche assignée.</Alert>
+      {/* Si l'utilisateur n'a aucun projet, affiche un message d'information */}
+      {myProjects.length === 0 ? (
+        <Alert severity="info">Vous n'avez aucun projet.</Alert>
       ) : (
         <Paper variant="outlined" sx={{ p: 2 }}>
+          {/* Liste des projets */}
           <List>
-            {filteredTasks.map(task => (
+            {myProjects.map(project => (
               <ListItem 
-                key={task.id}
-                secondaryAction={<EditTask task={task} projectId={task.projectId} />}
+                button 
+                key={project.id} 
+                component={RouterLink} 
+                to={`/projects/${project.id}`}
               >
-                <ListItemText 
-                  primary={`${task.title} - ${task.status}`} 
-                  secondary={`Projet ID: ${task.projectId}`} 
-                />
+                {/* Affichage du nom et de la description de chaque projet */}
+                <ListItemText primary={project.name} secondary={project.description} />
               </ListItem>
             ))}
           </List>
@@ -95,4 +80,4 @@ function MyTasks() {
   );
 }
 
-export default MyTasks;
+export default MyProjects;
