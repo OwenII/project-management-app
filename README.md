@@ -91,6 +91,9 @@ Une fois l’application lancée, vous pouvez :
 - Mettez à jour votre nom d’utilisateur quand vous le souhaitez.  
 - Supprimez votre compte, si tel est votre choix, après confirmation (cette action est irréversible 😱).
 
+Attention certaines pages ne sont pas affichées dans l'interface utilisateur initiales mais vous devez aller dans le menu utilisateur pour les voir en cliquant sur le logo profil. 
+
+![Profil Image](README/profil.png)
 ---
 
 ## 3. Détails du Schéma GraphQL 🏛️
